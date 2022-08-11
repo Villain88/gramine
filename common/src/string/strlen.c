@@ -10,6 +10,7 @@ size_t strnlen(const char* str, size_t maxlen) {
     size_t len;
     for (len = 0; len < maxlen && str[len] != '\0'; len++)
         ;
+    log_trace("strlen ret: %lu", len);
     return len;
 }
 
