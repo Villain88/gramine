@@ -400,6 +400,12 @@ static int pf_file_map(struct protected_file* pf, PAL_HANDLE handle, void** addr
     if (size == 0)
         return -PAL_ERROR_INVAL;
 
+    /* If MAP_PRIVATE flag is set, we don't need to write the changes back to the file.
+     * Proceed as if it's read only. */
+    if ((prot & PAL_PROT_WRITECOPY) && (prot & PAL_PROT_WRITE)) {
+        prot = prot & ~PAL_PROT_WRITE;
+    }
+
     assert(WITHIN_MASK(prot, PAL_PROT_MASK));
     if ((prot & PAL_PROT_READ) && (prot & PAL_PROT_WRITE)) {
         log_warning("pf_file_map(PF fd %d): trying to map with R+W access", fd);
