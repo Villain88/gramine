@@ -118,7 +118,7 @@ void update_encrypted_files_key(struct libos_encrypted_files_key* key, const pf_
  * The newly created `libos_encrypted_file` object will have `use_count` set to 1.
  */
 int encrypted_file_open(const char* uri, struct libos_encrypted_files_key* key,
-                        struct libos_encrypted_file** out_enc);
+                        struct libos_encrypted_file** out_enc, enum pal_access access);
 
 /*
  * \brief Create a new encrypted file.
@@ -133,7 +133,7 @@ int encrypted_file_open(const char* uri, struct libos_encrypted_files_key* key,
  * The newly created `libos_encrypted_file` object will have `use_count` set to 1.
  */
 int encrypted_file_create(const char* uri, mode_t perm, struct libos_encrypted_files_key* key,
-                          struct libos_encrypted_file** out_enc);
+                          struct libos_encrypted_file** out_enc, enum pal_access access);
 
 /*
  * \brief Deallocate an encrypted file.
@@ -147,7 +147,7 @@ void encrypted_file_destroy(struct libos_encrypted_file* enc);
  *
  * This increases `use_count`, and opens the file if `use_count` was 0.
  */
-int encrypted_file_get(struct libos_encrypted_file* enc);
+int encrypted_file_get(struct libos_encrypted_file* enc, enum pal_access access);
 
 /*
  * \brief Decrease the use count of an encrypted file.

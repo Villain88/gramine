@@ -22,6 +22,7 @@
 #include "spinlock.h"
 #include "toml_utils.h"
 #include "topo_info.h"
+#include "enclave_tf.h"
 
 /* The timeout of 50ms was found to be a safe TSC drift correction periodicity based on results
  * from multiple systems. Any higher or lower could pose risks of negative time drift or
@@ -731,4 +732,9 @@ int _PalSegmentBaseSet(enum pal_segment_reg reg, uintptr_t addr) {
         default:
             return -PAL_ERROR_INVAL;
     }
+}
+
+int _PalGetTrustedFileHash(const char* path, sha256_hash_t **hash) {
+    get_tf_file_hash(path, hash);
+    return 0;
 }

@@ -14,6 +14,8 @@
 #include <stdint.h>
 #include <stdnoreturn.h>
 
+#include "types.h"
+
 // TODO: fix this (but see pal/include/arch/x86_64/pal_arch.h)
 #define INSIDE_PAL_H
 
@@ -929,6 +931,8 @@ int PalAttestationQuote(const void* user_report_data, size_t user_report_data_si
  * -PAL_ERROR_NOTIMPLEMENTED.
  */
 int PalGetSpecialKey(const char* name, void* key, size_t* key_size);
+
+int PalGetTrustedFileHash(const char* path, sha256_hash_t **hash);
 
 #ifdef __GNUC__
 #define symbol_version_default(real, name, version) \
