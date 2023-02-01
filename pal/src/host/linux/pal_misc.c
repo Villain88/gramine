@@ -81,5 +81,7 @@ int _PalGetSpecialKey(const char* name, void* key, size_t* key_size) {
 }
 
 int _PalGetTrustedFileHash(const char* path, sha256_hash_t **hash) {
+    __UNUSED(path);
+    __UNUSED(hash);
     return -PAL_ERROR_NOTIMPLEMENTED;
 }

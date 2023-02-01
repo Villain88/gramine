@@ -210,6 +210,37 @@ static int encrypted_file_internal_open(struct libos_encrypted_file* enc, PAL_HA
     int ret;
     char* normpath = NULL;
 
+    assert(strstartswith(enc->uri, URI_PREFIX_FILE));
+    const char* path = enc->uri + static_strlen(URI_PREFIX_FILE);
+
+    size_t normpath_size = strlen(path) + 1;
+    normpath = malloc(normpath_size);
+    if (!normpath) {
+        ret = -ENOMEM;
+        goto out;
+    }
+
+    ret = get_norm_path(path, normpath, &normpath_size);
+    if (ret < 0) {
+        ret = pal_to_unix_errno(ret);
+        goto out;
+    }
+
+    sha256_hash_t *hash = NULL;
+    if (!strcmp(g_pal_public_state->host_type, "Linux-SGX")) {
+        int res = PalGetTrustedFileHash(normpath, &hash);
+        if (PF_FAILURE(res)) {
+            ret = -EACCES;
+            goto out;
+        } else if (hash != NULL) {
+            if (create || (access == PAL_ACCESS_RDWR) || (access == PAL_ACCESS_WRONLY)) {
+                log_error("Disallowing create/write/append to a protected file '%s' with fixed hash", normpath);
+                ret = -EACCES;
+                goto out;
+            }
+        }
+    }
+
     if (!pal_handle) {
         enum pal_create_mode create_mode = create ? PAL_CREATE_ALWAYS : PAL_CREATE_NEVER;
         ret = PalStreamOpen(enc->uri, PAL_ACCESS_RDWR, share_flags, create_mode,
@@ -229,22 +260,6 @@ static int encrypted_file_internal_open(struct libos_encrypted_file* enc, PAL_HA
     }
     size_t size = pal_attr.pending_size;
 
-    assert(strstartswith(enc->uri, URI_PREFIX_FILE));
-    const char* path = enc->uri + static_strlen(URI_PREFIX_FILE);
-
-    size_t normpath_size = strlen(path) + 1;
-    normpath = malloc(normpath_size);
-    if (!normpath) {
-        ret = -ENOMEM;
-        goto out;
-    }
-
-    ret = get_norm_path(path, normpath, &normpath_size);
-    if (ret < 0) {
-        ret = pal_to_unix_errno(ret);
-        goto out;
-    }
-
     pf_context_t* pf;
     lock(&g_keys_lock);
     if (!enc->key->is_set) {
@@ -254,25 +269,7 @@ static int encrypted_file_internal_open(struct libos_encrypted_file* enc, PAL_HA
         goto out;
     }
 
-    log_error("norm path of %s - %s ", path, normpath);
-    sha256_hash_t *hash = NULL;
-    pf_file_mode_t mode = PF_FILE_MODE_READ | PF_FILE_MODE_WRITE;
-    if (!strcmp(g_pal_public_state->host_type, "Linux-SGX")) {
-        int res = PalGetTrustedFileHash(normpath, &hash);
-        if (PF_FAILURE(res)) {
-            ret = -EACCES;
-            goto out;
-        } else if (hash != NULL) {
-            mode = PF_FILE_MODE_READ;
-            if ((access == PAL_ACCESS_RDWR) || (access == PAL_ACCESS_WRONLY)) {
-                log_error("Disallowing create/write/append to a protected file '%s' with fixed hash", normpath);
-                ret = -EACCES;
-                goto out;
-            }
-        }
-    }
-
-    pf_status_t pfs = pf_open(pal_handle, normpath, size, mode, create, &enc->key->pf_key, &pf);
+    pf_status_t pfs = pf_open(pal_handle, normpath, size, PF_FILE_MODE_READ | PF_FILE_MODE_WRITE, create, &enc->key->pf_key, &pf);
 
     unlock(&g_keys_lock);
     if (PF_FAILURE(pfs)) {
@@ -293,7 +290,7 @@ static int encrypted_file_internal_open(struct libos_encrypted_file* enc, PAL_HA
     ret = 0;
 out:
     free(normpath);
-    if (ret < 0)
+    if (ret < 0 && pal_handle)
         PalObjectClose(pal_handle);
     return ret;
 }
@@ -901,7 +898,7 @@ BEGIN_RS_FUNC(encrypted_file) {
     if (enc->use_count > 0) {
         assert(enc->pal_handle);
         int ret = encrypted_file_internal_open(enc, enc->pal_handle, /*create=*/false,
-                                               /*access=*/0, /*share_flags=*/0);
+                                               /*access=*/PAL_ACCESS_RDONLY, /*share_flags=*/0);
         if (ret < 0)
             return ret;
     } else {
