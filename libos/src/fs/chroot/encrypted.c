@@ -174,7 +174,7 @@ out:
 static int chroot_encrypted_open(struct libos_handle* hdl, struct libos_dentry* dent, int flags) {
     assert(locked(&g_dcache_lock));
     assert(dent->inode);
-    //__UNUSED(flags);
+
     int ret;
 
     if (dent->inode->type == S_IFREG) {
@@ -199,7 +199,6 @@ static int chroot_encrypted_creat(struct libos_handle* hdl, struct libos_dentry*
                                   mode_t perm) {
     assert(locked(&g_dcache_lock));
     assert(!dent->inode);
-    //__UNUSED(flags);
 
     char* uri;
     int ret = chroot_dentry_uri(dent, S_IFREG, &uri);
