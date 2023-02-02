@@ -1358,10 +1358,11 @@ int _PalStreamSecureSave(LIB_SSL_CONTEXT* ssl_ctx, const uint8_t** obuf, size_t*
     return 0;
 }
 
-int get_tf_file_hash(const char* path, sgx_file_hash_t **hash) {
+int get_tf_file_hash(const char* path, sgx_file_hash_t** hash, size_t* hash_size) {
     struct trusted_file* tf = get_trusted_or_allowed_file(path);
     if (tf && !tf->allowed) {
         *hash = &tf->file_hash;
+        *hash_size = sizeof(sgx_file_hash_t);
     }
     return PAL_ERROR_SUCCESS;
 }

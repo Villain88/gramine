@@ -64,8 +64,9 @@ double _PalGetBogomips(void) {
     return 0.0;
 }
 
-int _PalGetTrustedFileHash(const char* path, sha256_hash_t **hash) {
+int _PalGetTrustedFileHash(const char* path, uint8_t** hash, size_t* hash_size) {
     __UNUSED(path);
     __UNUSED(hash);
+    __UNUSED(hash_size);
     return -PAL_ERROR_NOTIMPLEMENTED;
 }

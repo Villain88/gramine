@@ -78,4 +78,4 @@ int copy_and_verify_trusted_file(const char* path, uint8_t* buf, const void* ume
 
 int init_trusted_files(void);
 int init_allowed_files(void);
-int get_tf_file_hash(const char* path, sgx_file_hash_t **hash);
+int get_tf_file_hash(const char* path, sgx_file_hash_t **hash, size_t* hash_size);

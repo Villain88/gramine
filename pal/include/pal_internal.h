@@ -244,7 +244,7 @@ int _PalAttestationReport(const void* user_report_data, size_t* user_report_data
 int _PalAttestationQuote(const void* user_report_data, size_t user_report_data_size, void* quote,
                          size_t* quote_size);
 int _PalGetSpecialKey(const char* name, void* key, size_t* key_size);
-int _PalGetTrustedFileHash(const char* path, sha256_hash_t **hash);
+int _PalGetTrustedFileHash(const char* path, uint8_t** hash, size_t* hash_size);
 
 #define INIT_FAIL(msg, ...)                                                         \
     do {                                                                            \

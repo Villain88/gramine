@@ -52,6 +52,6 @@ int PalGetSpecialKey(const char* name, void* key, size_t* key_size) {
     return _PalGetSpecialKey(name, key, key_size);
 }
 
-int PalGetTrustedFileHash(const char* path, sha256_hash_t **hash) {
-    return _PalGetTrustedFileHash(path, hash);
+int PalGetTrustedFileHash(const char* path, uint8_t** hash, size_t* hash_size) {
+    return _PalGetTrustedFileHash(path, hash, hash_size);
 }

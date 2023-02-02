@@ -8,15 +8,15 @@
 #include <stdint.h>
 
 #include "list.h"
-#include "types.h"
-
 
 enum {
     FILE_CHECK_POLICY_STRICT = 0,
     FILE_CHECK_POLICY_ALLOW_ALL_BUT_LOG,
 };
 
-typedef sha256_hash_t sgx_file_hash_t;
+typedef struct {
+    uint8_t bytes[32];
+} sgx_file_hash_t;
 
 typedef struct {
     uint8_t bytes[16];

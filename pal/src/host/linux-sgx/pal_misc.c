@@ -734,7 +734,7 @@ int _PalSegmentBaseSet(enum pal_segment_reg reg, uintptr_t addr) {
     }
 }
 
-int _PalGetTrustedFileHash(const char* path, sha256_hash_t **hash) {
-    get_tf_file_hash(path, hash);
+int _PalGetTrustedFileHash(const char* path, uint8_t** hash, size_t* hash_size) {
+    get_tf_file_hash(path, (sgx_file_hash_t**)hash, hash_size);
     return 0;
 }

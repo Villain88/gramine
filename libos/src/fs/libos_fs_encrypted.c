@@ -13,7 +13,6 @@
 #include "libos_utils.h"
 #include "protected_files.h"
 #include "toml_utils.h"
-#include "types.h"
 
 static LISTP_TYPE(libos_encrypted_files_key) g_keys = LISTP_INIT;
 
@@ -142,7 +141,7 @@ static void cb_debug(const char* msg) {
 }
 #endif
 
-static bool protected_file_check_hash(pf_context_t* pf, const sha256_hash_t *file_hash)
+static bool encrypted_file_check_hash(pf_context_t* pf, const uint8_t *file_hash)
 {
     assert(pf);
     assert(file_hash);
@@ -188,10 +187,10 @@ static bool protected_file_check_hash(pf_context_t* pf, const sha256_hash_t *fil
         offset += bytes_read;
     }
 
-    sha256_hash_t pf_file_hash;
-    ret = lib_SHA256Final(&file_sha, pf_file_hash.bytes);
+    uint8_t pf_file_hash[SHA256_DIGEST_LEN];
+    ret = lib_SHA256Final(&file_sha, pf_file_hash);
 
-    if (memcmp(&pf_file_hash, file_hash, sizeof(pf_file_hash))) {
+    if (memcmp(pf_file_hash, file_hash, sizeof(pf_file_hash))) {
         return false;
     }
 
@@ -226,13 +225,15 @@ static int encrypted_file_internal_open(struct libos_encrypted_file* enc, PAL_HA
         goto out;
     }
 
-    sha256_hash_t *hash = NULL;
+    uint8_t *hash = NULL;
     if (!strcmp(g_pal_public_state->host_type, "Linux-SGX")) {
-        int res = PalGetTrustedFileHash(normpath, &hash);
+        size_t hash_size = 0;
+        int res = PalGetTrustedFileHash(normpath, &hash, &hash_size) ;
         if (PF_FAILURE(res)) {
             ret = -EACCES;
             goto out;
         } else if (hash != NULL) {
+            assert(hash_size == SHA256_DIGEST_LEN);
             if (create || (access == PAL_ACCESS_RDWR) || (access == PAL_ACCESS_WRONLY)) {
                 log_error("Disallowing create/write/append to a protected file '%s' with fixed hash", normpath);
                 ret = -EACCES;
@@ -278,7 +279,7 @@ static int encrypted_file_internal_open(struct libos_encrypted_file* enc, PAL_HA
         goto out;
     }
 
-    if (!strcmp(g_pal_public_state->host_type, "Linux-SGX") && hash && !protected_file_check_hash(pf, hash)) {
+    if (!strcmp(g_pal_public_state->host_type, "Linux-SGX") && hash && !encrypted_file_check_hash(pf, hash)) {
         log_error("Hash of trusted/protected file '%s' does not match with the reference hash in manifest", enc->uri);
         ret = -EACCES;
         pf_close(pf);
